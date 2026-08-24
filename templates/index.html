@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Spotify Music Intelligence</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        spotify: "#1DB954",
+                        dark: "#121212",
+                        card: "#181818",
+                        muted: "#B3B3B3"
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+
+<body class="min-h-screen bg-dark text-white">
+
+    <!-- Main Container -->
+    <div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+
+        <!-- Header -->
+        <header class="mb-8">
+
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+
+                <div>
+                    <p class="text-sm font-medium uppercase tracking-wider text-spotify">
+                        Data Analytics Project
+                    </p>
+
+                    <h1 class="mt-1 text-3xl font-bold tracking-tight sm:text-4xl">
+                        Spotify Music Intelligence
+                    </h1>
+
+                    <p class="mt-2 max-w-2xl text-sm text-muted">
+                        Explore artists, genres, popularity, streams, release trends,
+                        and audio features.
+                    </p>
+                </div>
+
+                <!-- Spotify-style indicator -->
+                <div class="flex items-center gap-2 rounded-full bg-card px-4 py-2 text-sm text-muted">
+                    <span class="h-3 w-3 rounded-full bg-spotify"></span>
+                    Music Analytics
+                </div>
+
+            </div>
+
+        </header>
+
+
+        <!-- Filters -->
+        <section class="mb-6 rounded-xl bg-card p-5 shadow-lg">
+
+            <div class="mb-4">
+                <h2 class="text-lg font-semibold">
+                    Filters
+                </h2>
+
+                <p class="text-sm text-muted">
+                    Filter the dashboard by artist or genre.
+                </p>
+            </div>
+
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-end">
+
+                <!-- Artist -->
+                <div class="w-full sm:max-w-xs">
+
+                    <label
+                        for="artist"
+                        class="mb-2 block text-sm font-medium text-gray-300"
+                    >
+                        Artist
+                    </label>
+
+                    <select
+                        id="artist"
+                        class="w-full rounded-lg border border-gray-700 bg-dark px-4 py-2.5
+                               text-sm text-white outline-none transition
+                               focus:border-spotify focus:ring-1 focus:ring-spotify"
+                    >
+                        <option value="All">
+                            All Artists
+                        </option>
+                    </select>
+
+                </div>
+
+
+                <!-- Genre -->
+                <div class="w-full sm:max-w-xs">
+
+                    <label
+                        for="genre"
+                        class="mb-2 block text-sm font-medium text-gray-300"
+                    >
+                        Genre
+                    </label>
+
+                    <select
+                        id="genre"
+                        class="w-full rounded-lg border border-gray-700 bg-dark px-4 py-2.5
+                               text-sm text-white outline-none transition
+                               focus:border-spotify focus:ring-1 focus:ring-spotify"
+                    >
+                        <option value="All">
+                            All Genres
+                        </option>
+                    </select>
+
+                </div>
+
+
+                <!-- Apply -->
+                <button
+                    onclick="load()"
+                    class="rounded-lg bg-spotify px-6 py-2.5 text-sm font-semibold
+                           text-black transition hover:bg-green-400
+                           focus:outline-none focus:ring-2 focus:ring-spotify
+                           focus:ring-offset-2 focus:ring-offset-card"
+                >
+                    Apply Filters
+                </button>
+
+            </div>
+
+        </section>
+
+
+        <!-- KPI Cards -->
+        <section class="mb-6">
+
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+
+                <!-- Tracks -->
+                <div class="rounded-xl bg-card p-5 shadow-lg">
+
+                    <p class="text-sm font-medium text-muted">
+                        Tracks
+                    </p>
+
+                    <p
+                        id="t"
+                        class="mt-2 text-3xl font-bold"
+                    >
+                        -
+                    </p>
+
+                    <p class="mt-1 text-xs text-muted">
+                        Total tracks analyzed
+                    </p>
+
+                </div>
+
+
+                <!-- Artists -->
+                <div class="rounded-xl bg-card p-5 shadow-lg">
+
+                    <p class="text-sm font-medium text-muted">
+                        Artists
+                    </p>
+
+                    <p
+                        id="a"
+                        class="mt-2 text-3xl font-bold"
+                    >
+                        -
+                    </p>
+
+                    <p class="mt-1 text-xs text-muted">
+                        Unique artists
+                    </p>
+
+                </div>
+
+
+                <!-- Popularity -->
+                <div class="rounded-xl bg-card p-5 shadow-lg">
+
+                    <p class="text-sm font-medium text-muted">
+                        Avg. Popularity
+                    </p>
+
+                    <p
+                        id="p"
+                        class="mt-2 text-3xl font-bold text-spotify"
+                    >
+                        -
+                    </p>
+
+                    <p class="mt-1 text-xs text-muted">
+                        Average popularity score
+                    </p>
+
+                </div>
+
+
+                <!-- Streams -->
+                <div class="rounded-xl bg-card p-5 shadow-lg">
+
+                    <p class="text-sm font-medium text-muted">
+                        Avg. Streams
+                    </p>
+
+                    <p
+                        id="s"
+                        class="mt-2 text-3xl font-bold"
+                    >
+                        -
+                    </p>
+
+                    <p class="mt-1 text-xs text-muted">
+                        Average streams per track
+                    </p>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- Charts -->
+        <section>
+
+            <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+
+                <!-- Artist Performance -->
+                <div class="rounded-xl bg-card p-5 shadow-lg">
+
+                    <div class="mb-4">
+                        <h2 class="text-lg font-semibold">
+                            Artist Performance
+                        </h2>
+
+                        <p class="text-sm text-muted">
+                            Average streams by artist
+                        </p>
+                    </div>
+
+                    <div class="relative h-[320px]">
+                        <canvas id="ac"></canvas>
+                    </div>
+
+                </div>
+
+
+                <!-- Genre Performance -->
+                <div class="rounded-xl bg-card p-5 shadow-lg">
+
+                    <div class="mb-4">
+                        <h2 class="text-lg font-semibold">
+                            Genre Performance
+                        </h2>
+
+                        <p class="text-sm text-muted">
+                            Average streams by genre
+                        </p>
+                    </div>
+
+                    <div class="relative h-[320px]">
+                        <canvas id="gc"></canvas>
+                    </div>
+                </div>
+
+                <!-- Popularity Over Time -->
+                <div class="rounded-xl bg-card p-5 shadow-lg">
+
+                    <div class="mb-4">
+                        <h2 class="text-lg font-semibold">
+                            Popularity Over Time
+                        </h2>
+
+                        <p class="text-sm text-muted">
+                            Average popularity by release year
+                        </p>
+                    </div>
+
+                    <div class="relative h-[320px]">
+                        <canvas id="tc"></canvas>
+                    </div>
+                </div>
+
+                <!-- Energy vs Streams -->
+                <div class="rounded-xl bg-card p-5 shadow-lg">
+
+                    <div class="mb-4">
+                        <h2 class="text-lg font-semibold">
+                            Energy vs. Streams
+                        </h2>
+
+                        <p class="text-sm text-muted">
+                            Average streams across energy levels
+                        </p>
+                    </div>
+
+                    <div class="relative h-[320px]">
+                        <canvas id="ec"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <footer class="mt-10 border-t border-gray-800 pt-6 text-center">
+
+            <p class="text-xs text-muted">
+                Spotify Music Intelligence · Rianne Gonzales · 2026
+            </p>
+
+            <p class="mt-1 text-xs text-gray-600">
+                PostgreSQL · Python · SQL · Tableau · Excel
+            </p>
+        </footer>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+
+        let charts = {};
+
+        const $ = (id) => document.getElementById(id);
+
+        // Fetch JSON from backend
+        async function fetchJSON(url) {
+
+            const response = await fetch(url);
+
+            if (!response.ok) {
+                throw new Error(`Request failed: ${response.status}`);
+            }
+
+            return await response.json();
+        }
+
+        // Draw Chart
+        function drawChart(id, type, labels, data, label) {
+
+            if (charts[id]) {
+                charts[id].destroy();
+            }
+
+            charts[id] = new Chart($(id), {
+
+                type: type,
+
+                data: {
+                    labels: labels,
+
+                    datasets: [
+                        {
+                            label: label,
+                            data: data,
+
+                            borderWidth: 2,
+
+                            backgroundColor: "#1DB954",
+                            borderColor: "#1DB954",
+
+                            borderRadius: 6,
+
+                            tension: 0.3
+                        } ] },
+
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: "#B3B3B3"
+                            } } },
+
+                    scales: {
+                        x: {
+                            ticks: {
+                                color: "#B3B3B3"
+                            },
+                            grid: {
+                                color: "#2A2A2A"
+                            } },
+
+                        y: {
+                            ticks: {
+                                color: "#B3B3B3"
+                            },
+                            grid: {
+                                color: "#2A2A2A"
+                            } } } } }); }
+
+        // Load Dashboard
+        async function load() {
+
+            try {
+
+                const selectedArtist = $("artist").value;
+                const selectedGenre = $("genre").value;
+
+                const url =
+                    `/api/dashboard?artist=${encodeURIComponent(selectedArtist)}&genre=${encodeURIComponent(selectedGenre)}`;
+                const data = await fetchJSON(url);
+
+                // KPI Cards
+                $("t").textContent =
+                    Number(data.kpis.tracks).toLocaleString();
+
+                $("a").textContent =
+                    Number(data.kpis.artists).toLocaleString();
+
+                $("p").textContent =
+                    Number(data.kpis.avg_popularity).toFixed(2);
+
+                $("s").textContent =
+                    Number(data.kpis.avg_streams).toLocaleString();
+
+                // Artist Chart
+                drawChart(
+                    "ac",
+                    "bar",
+
+                    data.artists.map(x => x.artist),
+                    data.artists.map(x => x.streams),
+                    "Average Streams"
+                );
+
+                // Genre Chart
+                drawChart(
+                    "gc",
+                    "bar",
+
+                    data.genres.map(x => x.genre),
+
+                    data.genres.map(x => x.streams),
+
+                    "Average Streams"
+                );
+
+                // Popularity Trend
+                drawChart(
+                    "tc",
+                    "line",
+
+                    data.trend.map(x => x.year),
+
+                    data.trend.map(x => x.popularity),
+
+                    "Average Popularity"
+                );
+
+
+                // Energy vs Streams
+
+                drawChart(
+                    "ec",
+                    "bar",
+
+                    data.energy.map(x => x.energy_group),
+
+                    data.energy.map(x => x.streams),
+
+                    "Average Streams"
+                );
+
+            }
+
+            catch (error) {
+
+                console.error("Dashboard error:", error);
+            }
+        }
+
+        async function loadFilters() {
+
+            try {
+                const data = await fetchJSON("/api/filters");
+
+                data.artists.forEach(artist => {
+                    $("artist").add(
+                        new Option(artist, artist)
+                    );
+                });
+
+                data.genres.forEach(genre => {
+
+                    $("genre").add(
+                        new Option(genre, genre)
+                    );
+
+                });
+
+                load();
+
+            }
+
+            catch (error) {
+
+                console.error("Filter loading error:", error);
+
+            }
+
+        }
+
+        loadFilters();
+
+    </script>
+
+</body>
+
+</html>
