@@ -2,7 +2,7 @@
 
 A data analytics-focused music intelligence platform that analyzes Spotify data to discover patterns in artist, track, albums, listening behavior, and audio characteristics.
 
->  **Status:** Complete — Audio Characteristics section is working, however, I can't analyze every song listened because I need to download it locally since I don't have any permission from Spotify to directly analyze songs from it.
+>  **Status:** In Development — Core backend, PostgreSQL integration, Spotify authentication, analytics APIs, and interactive dashboard are implemented. Additional analytics (Power BI and Excel) are ongoing.
 
 ---
 
@@ -10,45 +10,8 @@ A data analytics-focused music intelligence platform that analyzes Spotify data 
 
 **Spotify Music Intelligence** is a data-driven analytics project designed to explore Spotify music data and answer questions about music popularity, streaming performance, artist consistency, and audio characteristics.
 
-The project combines **Python + Flask + PostgreSQL + SQL + Spotify API + HTML/JavaScript + Tailwind + Chart.js** to build an end-to-end data pipeline.
+**Tech Stack:**
+Python · Flask · PostgreSQL · SQLAlchemy · SQL · Spotify Web API · OAuth 2.0 · JavaScript · Tailwind CSS · Chart.js · Pandas
 
----
-
-## Project Architecture
-
-```text
-                  SPOTIFY MUSIC INTELLIGENCE
-                              │
-               ┌──────────────┴──────────────┐
-               │                             │
-               │                      Spotify Web API
-        Python / Pandas                      │
-               │                     Spotify OAuth 2.0
-               │                             │
-         Data Cleaning                   User Data
-               │                             │
-               └──────────────┬──────────────┘
-                              ▼
-                          PostgreSQL
-                              │
-                              ▼
-                       SQL / SQLAlchemy
-                              │
-                    ┌─────────┴─────────┐
-                    │                   │
-                    ▼                   ▼
-              Flask Backend       Analytics Logic
-                    │                   │
-                    └─────────┬─────────┘
-                              ▼
-                          JSON APIs
-                              │
-                              ▼
-                      HTML / JavaScript
-                              │
-                ┌─────────────┴─────────────┐
-                ▼                           ▼
-           Chart.js                    Tailwind CSS
-                │
-                ▼
-        Interactive Dashboard
+**Core Focus:**
+Data Analytics · ETL/Data Cleaning · Database Design · API Integration · Data Visualization · Web Dashboard
