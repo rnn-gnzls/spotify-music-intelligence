@@ -1,526 +1,1044 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>Spotify Music Intelligence</title>
-
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-
-    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        spotify: "#1DB954",
-                        dark: "#121212",
-                        card: "#181818",
-                        muted: "#B3B3B3"
-                    }
-                }
-            }
-        }
-    </script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
 </head>
-
-<body class="min-h-screen bg-dark text-white">
-
-    <!-- Main Container -->
-    <div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-
-        <!-- Header -->
-        <header class="mb-8">
-
-            <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-
+<body class="min-h-screen bg-slate-950 text-slate-100">
+    <header class="border-b border-slate-800">
+        <div class="mx-auto max-w-7xl px-6 py-5">
+            <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div>
-                    <p class="text-sm font-medium uppercase tracking-wider text-spotify">
-                        Data Analytics Project
-                    </p>
-
-                    <h1 class="mt-1 text-3xl font-bold tracking-tight sm:text-4xl">
-                        Spotify Music Intelligence
-                    </h1>
-
-                    <p class="mt-2 max-w-2xl text-sm text-muted">
-                        Explore artists, genres, popularity, streams, release trends,
-                        and audio features.
-                    </p>
+                    <p class="text-sm font-medium text-emerald-400">MUSIC ANALYTICS</p>
+                    <h1 class="mt-1 text-2xl font-bold">Spotify Music Intelligence</h1>
+                    <p class="mt-1 text-sm text-slate-400">Listening behavior and music catalog analytics</p>
                 </div>
 
-                <!-- Spotify-style indicator -->
-                <div class="flex items-center gap-2 rounded-full bg-card px-4 py-2 text-sm text-muted">
-                    <span class="h-3 w-3 rounded-full bg-spotify"></span>
-                    Music Analytics
-                </div>
+                <div class="flex items-center gap-3">
+                    <div class="flex items-center gap-2">
+                        <span id="statusDot" class="h-2.5 w-2.5 rounded-full bg-slate-500"></span>
+                        <span id="statusText" class="text-sm text-slate-400">Checking database...</span>
+                    </div>
 
-            </div>
-
-        </header>
-
-
-        <!-- Filters -->
-        <section class="mb-6 rounded-xl bg-card p-5 shadow-lg">
-
-            <div class="mb-4">
-                <h2 class="text-lg font-semibold">
-                    Filters
-                </h2>
-
-                <p class="text-sm text-muted">
-                    Filter the dashboard by artist or genre.
-                </p>
-            </div>
-
-            <div class="flex flex-col gap-3 sm:flex-row sm:items-end">
-
-                <!-- Artist -->
-                <div class="w-full sm:max-w-xs">
-
-                    <label
-                        for="artist"
-                        class="mb-2 block text-sm font-medium text-gray-300"
+                    <a
+                        id="spotifyLogin"
+                        href="/login/spotify"
+                        class="rounded-lg bg-emerald-500 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-emerald-400"
                     >
-                        Artist
-                    </label>
+                        Connect Spotify
+                    </a>
+
+                    <div id="spotifyUserBox" class="hidden items-center gap-2">
+                        <img
+                            id="spotifyUserImage"
+                            class="h-8 w-8 rounded-full"
+                            src=""
+                            alt=""
+                        >
+                        <span id="spotifyUserName" class="text-sm font-medium"></span>
+                        <a
+                            href="/logout/spotify"
+                            class="text-xs text-slate-400 hover:text-red-400"
+                        >
+                            Logout
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="mx-auto max-w-7xl px-6 py-8">
+        <!-- PERSONAL SPOTIFY ANALYTICS (shown only when logged in) -->
+        <section id="personalSpotifySection" class="mb-8 hidden rounded-xl border border-emerald-900/60 bg-slate-900 p-5">
+            <div class="mb-6 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+                <div>
+                    <p class="text-sm font-medium text-emerald-400">YOUR SPOTIFY</p>
+                    <h2 class="mt-1 text-xl font-semibold">My Spotify Analytics</h2>
+                    <p class="mt-1 text-sm text-slate-400">
+                        Based on your most recent plays
+                    </p>
+                </div>
+            </div>
+
+            <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <div class="rounded-lg bg-slate-800/60 p-4">
+                    <p class="text-sm text-slate-400">Recent Plays</p>
+                    <p id="personalRecentPlays" class="mt-2 text-2xl font-bold">-</p>
+                </div>
+
+                <div class="rounded-lg bg-slate-800/60 p-4">
+                    <p class="text-sm text-slate-400">Unique Recent Tracks</p>
+                    <p id="personalUniqueTracks" class="mt-2 text-2xl font-bold">-</p>
+                </div>
+
+                <div class="rounded-lg bg-slate-800/60 p-4">
+                    <p class="text-sm text-slate-400">Recent Artists</p>
+                    <p id="personalUniqueArtists" class="mt-2 text-2xl font-bold">-</p>
+                </div>
+
+                <div class="rounded-lg bg-slate-800/60 p-4">
+                    <p class="text-sm text-slate-400">Most Played Artist</p>
+                    <p id="personalTopArtists" class="mt-2 text-2xl font-bold">-</p>
+                </div>
+            </div>
+
+            <div class="mb-6 grid grid-cols-1 gap-5 lg:grid-cols-2">
+                <div class="rounded-lg border border-slate-800 bg-slate-950 p-5">
+                    <div class="mb-4">
+                        <h3 class="font-semibold">Your Top Artists</h3>
+                        <p class="text-xs text-slate-500">Ranked by actual play count from your recent listening</p>
+                    </div>
+
+                    <div class="h-[420px]">
+                        <canvas id="personalArtistChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="rounded-lg border border-slate-800 bg-slate-950 p-5">
+                    <div class="mb-4">
+                        <h3 class="font-semibold">Your Top Tracks</h3>
+                        <p class="text-xs text-slate-500">Ranked by actual play count from your recent listening</p>
+                    </div>
+
+                    <div class="h-[420px]">
+                        <canvas id="personalTrackChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-6 grid grid-cols-1 gap-5 lg:grid-cols-2">
+                <div class="rounded-lg border border-slate-800 bg-slate-950 p-5">
+                    <div class="mb-4">
+                        <h3 class="font-semibold">Your Listening Trend</h3>
+                        <p class="text-xs text-slate-500">Daily plays from your recent listening history</p>
+                    </div>
+
+                    <div class="h-80">
+                        <canvas id="personalTrendChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="rounded-lg border border-slate-800 bg-slate-950 p-5">
+                    <div class="mb-4">
+                        <h3 class="font-semibold">Your Top Albums</h3>
+                        <p class="text-xs text-slate-500">Albums that appear most in your recent plays</p>
+                    </div>
+
+                    <div class="h-80">
+                        <canvas id="personalAlbumChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rounded-lg border border-slate-800 bg-slate-950 p-5">
+                <div class="mb-4">
+                    <h3 class="font-semibold">Recently Played</h3>
+                    <p class="text-xs text-slate-500">Your latest Spotify listening activity</p>
+                </div>
+
+                <div class="max-h-80 overflow-y-auto rounded-lg border border-slate-800">
+                    <table class="w-full min-w-[700px] text-left text-sm">
+                        <thead class="sticky top-0 z-10 bg-slate-900 text-xs uppercase text-slate-500">
+                            <tr>
+                                <th class="w-[35%] px-4 py-3">Track</th>
+                                <th class="w-[25%] px-4 py-3">Artist</th>
+                                <th class="w-[25%] px-4 py-3">Album</th>
+                                <th class="w-[15%] whitespace-nowrap px-4 py-3">Played</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="personalRecentTable" class="divide-y divide-slate-800"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- DEFAULT / CATALOG DASHBOARD (hidden once logged in to Spotify) -->
+        <div id="catalogSection">
+            <div class="mb-6 flex flex-col gap-3 md:flex-row md:items-end">
+                <div class="flex-1">
+                    <label for="artist" class="mb-2 block text-sm font-medium text-slate-300">Artist</label>
 
                     <select
                         id="artist"
-                        class="w-full rounded-lg border border-gray-700 bg-dark px-4 py-2.5
-                               text-sm text-white outline-none transition
-                               focus:border-spotify focus:ring-1 focus:ring-spotify"
+                        class="w-full rounded-lg border border-slate-700 bg-slate-900 px-4 py-2.5 text-sm outline-none focus:border-emerald-400"
                     >
-                        <option value="All">
-                            All Artists
-                        </option>
+                        <option>All</option>
                     </select>
-
                 </div>
 
-
-                <!-- Genre -->
-                <div class="w-full sm:max-w-xs">
-
-                    <label
-                        for="genre"
-                        class="mb-2 block text-sm font-medium text-gray-300"
-                    >
-                        Genre
-                    </label>
-
-                    <select
-                        id="genre"
-                        class="w-full rounded-lg border border-gray-700 bg-dark px-4 py-2.5
-                               text-sm text-white outline-none transition
-                               focus:border-spotify focus:ring-1 focus:ring-spotify"
-                    >
-                        <option value="All">
-                            All Genres
-                        </option>
-                    </select>
-
-                </div>
-
-
-                <!-- Apply -->
                 <button
-                    onclick="load()"
-                    class="rounded-lg bg-spotify px-6 py-2.5 text-sm font-semibold
-                           text-black transition hover:bg-green-400
-                           focus:outline-none focus:ring-2 focus:ring-spotify
-                           focus:ring-offset-2 focus:ring-offset-card"
+                    onclick="loadDashboard()"
+                    class="rounded-lg bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-slate-950 hover:bg-emerald-400"
                 >
-                    Apply Filters
+                    Apply Filter
                 </button>
-
             </div>
 
-        </section>
-
-
-        <!-- KPI Cards -->
-        <section class="mb-6">
-
-            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-
-                <!-- Tracks -->
-                <div class="rounded-xl bg-card p-5 shadow-lg">
-
-                    <p class="text-sm font-medium text-muted">
-                        Tracks
-                    </p>
-
-                    <p
-                        id="t"
-                        class="mt-2 text-3xl font-bold"
-                    >
-                        -
-                    </p>
-
-                    <p class="mt-1 text-xs text-muted">
-                        Total tracks analyzed
-                    </p>
-
+            <section class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+                <div class="rounded-xl border border-slate-800 bg-slate-900 p-5">
+                    <p class="text-sm text-slate-400">Tracks</p>
+                    <p id="tracksKpi" class="mt-2 text-3xl font-bold">-</p>
                 </div>
 
-
-                <!-- Artists -->
-                <div class="rounded-xl bg-card p-5 shadow-lg">
-
-                    <p class="text-sm font-medium text-muted">
-                        Artists
-                    </p>
-
-                    <p
-                        id="a"
-                        class="mt-2 text-3xl font-bold"
-                    >
-                        -
-                    </p>
-
-                    <p class="mt-1 text-xs text-muted">
-                        Unique artists
-                    </p>
-
+                <div class="rounded-xl border border-slate-800 bg-slate-900 p-5">
+                    <p class="text-sm text-slate-400">Artists</p>
+                    <p id="artistsKpi" class="mt-2 text-3xl font-bold">-</p>
                 </div>
 
-
-                <!-- Popularity -->
-                <div class="rounded-xl bg-card p-5 shadow-lg">
-
-                    <p class="text-sm font-medium text-muted">
-                        Avg. Popularity
-                    </p>
-
-                    <p
-                        id="p"
-                        class="mt-2 text-3xl font-bold text-spotify"
-                    >
-                        -
-                    </p>
-
-                    <p class="mt-1 text-xs text-muted">
-                        Average popularity score
-                    </p>
-
+                <div class="rounded-xl border border-slate-800 bg-slate-900 p-5">
+                    <p class="text-sm text-slate-400">Albums</p>
+                    <p id="albumsKpi" class="mt-2 text-3xl font-bold">-</p>
                 </div>
 
-
-                <!-- Streams -->
-                <div class="rounded-xl bg-card p-5 shadow-lg">
-
-                    <p class="text-sm font-medium text-muted">
-                        Avg. Streams
-                    </p>
-
-                    <p
-                        id="s"
-                        class="mt-2 text-3xl font-bold"
-                    >
-                        -
-                    </p>
-
-                    <p class="mt-1 text-xs text-muted">
-                        Average streams per track
-                    </p>
-
+                <div class="rounded-xl border border-slate-800 bg-slate-900 p-5">
+                    <p class="text-sm text-slate-400">Total Listens</p>
+                    <p id="listensKpi" class="mt-2 text-3xl font-bold">-</p>
                 </div>
 
-            </div>
-
-        </section>
-
-
-        <!-- Charts -->
-        <section>
-
-            <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
-
-                <!-- Artist Performance -->
-                <div class="rounded-xl bg-card p-5 shadow-lg">
-
-                    <div class="mb-4">
-                        <h2 class="text-lg font-semibold">
-                            Artist Performance
-                        </h2>
-
-                        <p class="text-sm text-muted">
-                            Average streams by artist
-                        </p>
-                    </div>
-
-                    <div class="relative h-[320px]">
-                        <canvas id="ac"></canvas>
-                    </div>
-
+                <div class="rounded-xl border border-slate-800 bg-slate-900 p-5">
+                    <p class="text-sm text-slate-400">Unique Tracks</p>
+                    <p id="uniqueTracksKpi" class="mt-2 text-3xl font-bold">-</p>
                 </div>
+            </section>
 
+            <section class="mt-6 grid grid-cols-1 gap-5 lg:grid-cols-2">
+                <div class="rounded-xl border border-slate-800 bg-slate-900 p-5">
+                    <h2 class="font-semibold">Top Artists</h2>
+                    <p class="mb-4 text-xs text-slate-500">Based on listening activity</p>
 
-                <!-- Genre Performance -->
-                <div class="rounded-xl bg-card p-5 shadow-lg">
-
-                    <div class="mb-4">
-                        <h2 class="text-lg font-semibold">
-                            Genre Performance
-                        </h2>
-
-                        <p class="text-sm text-muted">
-                            Average streams by genre
-                        </p>
-                    </div>
-
-                    <div class="relative h-[320px]">
-                        <canvas id="gc"></canvas>
+                    <div class="h-[420px]">
+                        <canvas id="artistChart"></canvas>
                     </div>
                 </div>
 
-                <!-- Popularity Over Time -->
-                <div class="rounded-xl bg-card p-5 shadow-lg">
+                <div class="rounded-xl border border-slate-800 bg-slate-900 p-5">
+                    <h2 class="font-semibold">Top Tracks</h2>
+                    <p class="mb-4 text-xs text-slate-500">Most played tracks</p>
 
-                    <div class="mb-4">
-                        <h2 class="text-lg font-semibold">
-                            Popularity Over Time
-                        </h2>
-
-                        <p class="text-sm text-muted">
-                            Average popularity by release year
-                        </p>
-                    </div>
-
-                    <div class="relative h-[320px]">
-                        <canvas id="tc"></canvas>
+                    <div class="h-[420px]">
+                        <canvas id="trackChart"></canvas>
                     </div>
                 </div>
 
-                <!-- Energy vs Streams -->
-                <div class="rounded-xl bg-card p-5 shadow-lg">
+                <div class="rounded-xl border border-slate-800 bg-slate-900 p-5">
+                    <h2 class="font-semibold">Listening Trend</h2>
+                    <p class="mb-4 text-xs text-slate-500">Daily listening activity</p>
 
-                    <div class="mb-4">
-                        <h2 class="text-lg font-semibold">
-                            Energy vs. Streams
-                        </h2>
-
-                        <p class="text-sm text-muted">
-                            Average streams across energy levels
-                        </p>
-                    </div>
-
-                    <div class="relative h-[320px]">
-                        <canvas id="ec"></canvas>
+                    <div class="h-80">
+                        <canvas id="trendChart"></canvas>
                     </div>
                 </div>
-            </div>
-        </section>
 
-        <footer class="mt-10 border-t border-gray-800 pt-6 text-center">
+                <div class="rounded-xl border border-slate-800 bg-slate-900 p-5">
+                    <h2 class="font-semibold">Top Albums</h2>
+                    <p class="mb-4 text-xs text-slate-500">Albums represented in the catalog</p>
 
-            <p class="text-xs text-muted">
-                Spotify Music Intelligence · Rianne Gonzales · 2026
-            </p>
+                    <div class="h-[420px]">
+                        <canvas id="albumChart"></canvas>
+                    </div>
+                </div>
+            </section>
 
-            <p class="mt-1 text-xs text-gray-600">
-                PostgreSQL · Python · SQL · Tableau · Excel
-            </p>
-        </footer>
-    </div>
+            <section class="mt-6 rounded-xl border border-slate-800 bg-slate-900 p-5">
+                <div class="mb-5">
+                    <p class="text-sm font-medium text-emerald-400">AUDIO FEATURES</p>
 
-    <!-- JavaScript -->
+                    <h2 id="featureTrack" class="mt-1 text-xl font-semibold">-</h2>
+
+                    <div class="mt-1 flex flex-wrap items-center gap-3">
+                        <p id="featureArtist" class="text-sm text-slate-400">-</p>
+
+                        <a
+                            id="spotifyLink"
+                            href="#"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="hidden rounded-md border border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-300 hover:border-emerald-400 hover:text-emerald-400"
+                        >
+                            Open in Spotify
+                        </a>
+                    </div>
+                </div>
+
+                <div id="audioPlayerContainer" class="mb-6 hidden rounded-lg bg-slate-800/60 p-4">
+                    <div class="mb-2 flex items-center justify-between">
+                        <span class="text-xs font-medium uppercase tracking-wide text-slate-400">Local Audio</span>
+                        <span class="text-xs text-emerald-400">Available</span>
+                    </div>
+
+                    <audio
+                        id="audioPlayer"
+                        controls
+                        preload="metadata"
+                        class="w-full"
+                    ></audio>
+                </div>
+
+                <div id="noAudioMessage" class="mb-6 hidden rounded-lg border border-slate-800 bg-slate-950 p-4 text-sm text-slate-400">
+                    No local audio file is available for this track.
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 md:grid-cols-5">
+                    <div class="rounded-lg bg-slate-800/60 p-4">
+                        <p class="text-xs text-slate-400">Energy</p>
+                        <p id="energy" class="mt-1 text-xl font-semibold">-</p>
+                    </div>
+
+                    <div class="rounded-lg bg-slate-800/60 p-4">
+                        <p class="text-xs text-slate-400">Danceability</p>
+                        <p id="danceability" class="mt-1 text-xl font-semibold">-</p>
+                    </div>
+
+                    <div class="rounded-lg bg-slate-800/60 p-4">
+                        <p class="text-xs text-slate-400">Valence</p>
+                        <p id="valence" class="mt-1 text-xl font-semibold">-</p>
+                    </div>
+
+                    <div class="rounded-lg bg-slate-800/60 p-4">
+                        <p class="text-xs text-slate-400">Acousticness</p>
+                        <p id="acousticness" class="mt-1 text-xl font-semibold">-</p>
+                    </div>
+
+                    <div class="rounded-lg bg-slate-800/60 p-4">
+                        <p class="text-xs text-slate-400">Tempo</p>
+                        <p id="tempo" class="mt-1 text-xl font-semibold">-</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="mt-6 rounded-xl border border-slate-800 bg-slate-900 p-5">
+                <div class="mb-4">
+                    <h2 class="font-semibold">Track Explorer</h2>
+                    <p class="text-xs text-slate-500">Search the Spotify catalog</p>
+                </div>
+
+                <input
+                    id="search"
+                    type="text"
+                    placeholder="Search track, artist, or album..."
+                    oninput="loadTracks()"
+                    class="mb-4 w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-sm outline-none focus:border-emerald-400"
+                >
+
+                <div class="max-h-80 overflow-y-auto rounded-lg border border-slate-800">
+                    <table class="w-full min-w-[800px] text-left text-sm">
+                        <thead class="sticky top-0 z-10 bg-slate-900 text-xs uppercase text-slate-500">
+                            <tr>
+                                <th class="w-[28%] px-4 py-3">Track</th>
+                                <th class="w-[22%] px-4 py-3">Artist</th>
+                                <th class="w-[22%] px-4 py-3">Album</th>
+                                <th class="w-[18%] whitespace-nowrap px-4 py-3">Release Date</th>
+                                <th class="w-[10%] whitespace-nowrap px-4 py-3 text-right">Listens</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="trackTable" class="divide-y divide-slate-800"></tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+    </main>
+
     <script>
+        const charts = {};
 
-        let charts = {};
+        const $ = id => document.getElementById(id);
 
-        const $ = (id) => document.getElementById(id);
-
-        // Fetch JSON from backend
-        async function fetchJSON(url) {
-
+        async function getJSON(url) {
             const response = await fetch(url);
 
             if (!response.ok) {
                 throw new Error(`Request failed: ${response.status}`);
             }
 
-            return await response.json();
+            return response.json();
         }
 
-        // Draw Chart
-        function drawChart(id, type, labels, data, label) {
-
+        function createRankedBarChart(id, labels, data, label = "Plays") {
             if (charts[id]) {
                 charts[id].destroy();
             }
 
-            charts[id] = new Chart($(id), {
+            const canvas = $(id);
 
-                type: type,
+            charts[id] = new Chart(canvas, {
+                type: "bar",
 
                 data: {
-                    labels: labels,
+                    labels,
+                    datasets: [{
+                        label,
+                        data,
 
-                    datasets: [
-                        {
-                            label: label,
-                            data: data,
+                        backgroundColor: [
+                            "#1ed760",
+                            "#19c957",
+                            "#16b950",
+                            "#13a94a",
+                            "#109a44",
+                            "#0d8b3d",
+                            "#0b7d37",
+                            "#086e31",
+                            "#065f2b",
+                            "#045125"
+                        ],
 
-                            borderWidth: 2,
+                        borderRadius: 6,
+                        borderSkipped: false,
+                        barThickness: 24,
+                        maxBarThickness: 28
+                    }]
+                },
 
-                            backgroundColor: "#1DB954",
-                            borderColor: "#1DB954",
+                plugins: [ChartDataLabels],
 
-                            borderRadius: 6,
+                options: {
+                    indexAxis: "y",
 
-                            tension: 0.3
-                        } ] },
+                    responsive: true,
+                    maintainAspectRatio: false,
+
+                    animation: {
+                        duration: 700,
+                        easing: "easeOutQuart"
+                    },
+
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+
+                        tooltip: {
+                            backgroundColor: "#0f172a",
+                            titleColor: "#f8fafc",
+                            bodyColor: "#cbd5e1",
+                            borderColor: "#334155",
+                            borderWidth: 1,
+
+                            callbacks: {
+                                label: function(context) {
+                                    return ` ${Number(context.raw).toLocaleString()} ${label.toLowerCase()}`;
+                                }
+                            }
+                        },
+
+                        datalabels: {
+                            color: "#e2e8f0",
+                            anchor: "end",
+                            align: "right",
+
+                            font: {
+                                size: 12,
+                                weight: "600"
+                            },
+
+                            formatter: function(value) {
+                                return Number(value).toLocaleString();
+                            }
+                        }
+                    },
+
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+
+                            ticks: {
+                                color: "#64748b",
+                                font: {
+                                    size: 11
+                                },
+
+                                callback: function(value) {
+                                    return Number(value).toLocaleString();
+                                }
+                            },
+
+                            grid: {
+                                color: "rgba(51, 65, 85, 0.35)"
+                            },
+
+                            border: {
+                                display: false
+                            }
+                        },
+
+                        y: {
+                            ticks: {
+                                color: "#cbd5e1",
+
+                                font: {
+                                    size: 12,
+                                    weight: "500"
+                                }
+                            },
+
+                            grid: {
+                                display: false
+                            },
+
+                            border: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function createTrendChart(id, labels, data, label = "Listens") {
+            if (charts[id]) {
+                charts[id].destroy();
+            }
+
+            const canvas = $(id);
+
+            charts[id] = new Chart(canvas, {
+                type: "line",
+
+                data: {
+                    labels,
+                    datasets: [{
+                        label,
+                        data,
+                        borderColor: "#1ed760",
+                        backgroundColor: "rgba(30, 215, 96, 0.15)",
+                        pointBackgroundColor: "#1ed760",
+                        pointBorderColor: "#0b7d37",
+                        pointRadius: 3,
+                        pointHoverRadius: 5,
+                        tension: 0.35,
+                        fill: true,
+                        borderWidth: 2
+                    }]
+                },
 
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
 
+                    animation: {
+                        duration: 700,
+                        easing: "easeOutQuart"
+                    },
+
                     plugins: {
                         legend: {
-                            labels: {
-                                color: "#B3B3B3"
-                            } } },
+                            display: false
+                        },
+
+                        datalabels: {
+                            display: false
+                        },
+
+                        tooltip: {
+                            backgroundColor: "#0f172a",
+                            titleColor: "#f8fafc",
+                            bodyColor: "#cbd5e1",
+                            borderColor: "#334155",
+                            borderWidth: 1
+                        }
+                    },
 
                     scales: {
                         x: {
                             ticks: {
-                                color: "#B3B3B3"
+                                color: "#64748b",
+                                font: {
+                                    size: 11
+                                },
+                                maxRotation: 0,
+                                autoSkip: true
                             },
+
                             grid: {
-                                color: "#2A2A2A"
-                            } },
+                                color: "rgba(51, 65, 85, 0.2)"
+                            },
+
+                            border: {
+                                display: false
+                            }
+                        },
 
                         y: {
+                            beginAtZero: true,
+
                             ticks: {
-                                color: "#B3B3B3"
+                                color: "#64748b",
+                                font: {
+                                    size: 11
+                                }
                             },
+
                             grid: {
-                                color: "#2A2A2A"
-                            } } } } }); }
+                                color: "rgba(51, 65, 85, 0.35)"
+                            },
 
-        // Load Dashboard
-        async function load() {
+                            border: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+        }
 
-            try {
-
-                const selectedArtist = $("artist").value;
-                const selectedGenre = $("genre").value;
-
-                const url =
-                    `/api/dashboard?artist=${encodeURIComponent(selectedArtist)}&genre=${encodeURIComponent(selectedGenre)}`;
-                const data = await fetchJSON(url);
-
-                // KPI Cards
-                $("t").textContent =
-                    Number(data.kpis.tracks).toLocaleString();
-
-                $("a").textContent =
-                    Number(data.kpis.artists).toLocaleString();
-
-                $("p").textContent =
-                    Number(data.kpis.avg_popularity).toFixed(2);
-
-                $("s").textContent =
-                    Number(data.kpis.avg_streams).toLocaleString();
-
-                // Artist Chart
-                drawChart(
-                    "ac",
-                    "bar",
-
-                    data.artists.map(x => x.artist),
-                    data.artists.map(x => x.streams),
-                    "Average Streams"
-                );
-
-                // Genre Chart
-                drawChart(
-                    "gc",
-                    "bar",
-
-                    data.genres.map(x => x.genre),
-
-                    data.genres.map(x => x.streams),
-
-                    "Average Streams"
-                );
-
-                // Popularity Trend
-                drawChart(
-                    "tc",
-                    "line",
-
-                    data.trend.map(x => x.year),
-
-                    data.trend.map(x => x.popularity),
-
-                    "Average Popularity"
-                );
-
-
-                // Energy vs Streams
-
-                drawChart(
-                    "ec",
-                    "bar",
-
-                    data.energy.map(x => x.energy_group),
-
-                    data.energy.map(x => x.streams),
-
-                    "Average Streams"
-                );
-
+        function createChart(id, type, labels, data, label = "Value") {
+            if (type === "line") {
+                createTrendChart(id, labels, data, label);
+                return;
             }
 
-            catch (error) {
+            createRankedBarChart(id, labels, data, label);
+        }
 
-                console.error("Dashboard error:", error);
+        async function checkHealth() {
+            try {
+                await getJSON("/api/health");
+
+                $("statusDot").className =
+                    "h-2.5 w-2.5 rounded-full bg-emerald-400";
+
+                $("statusText").textContent =
+                    "PostgreSQL connected";
+            } catch (error) {
+                $("statusDot").className =
+                    "h-2.5 w-2.5 rounded-full bg-red-500";
+
+                $("statusText").textContent =
+                    "Database unavailable";
+
+                console.error(error);
             }
         }
 
         async function loadFilters() {
+            const data = await getJSON("/api/filters");
 
-            try {
-                const data = await fetchJSON("/api/filters");
-
-                data.artists.forEach(artist => {
-                    $("artist").add(
-                        new Option(artist, artist)
-                    );
-                });
-
-                data.genres.forEach(genre => {
-
-                    $("genre").add(
-                        new Option(genre, genre)
-                    );
-
-                });
-
-                load();
-
-            }
-
-            catch (error) {
-
-                console.error("Filter loading error:", error);
-
-            }
-
+            data.artists.forEach(artist => {
+                $("artist").add(
+                    new Option(artist, artist)
+                );
+            });
         }
 
-        loadFilters();
+        async function checkSpotifyStatus() {
+            try {
+                const data = await getJSON("/api/spotify/status");
 
+                if (!data.authenticated) {
+                    $("spotifyLogin").classList.remove("hidden");
+                    $("spotifyUserBox").classList.add("hidden");
+                    $("personalSpotifySection").classList.add("hidden");
+                    $("catalogSection").classList.remove("hidden");
+                    return;
+                }
+
+                $("spotifyLogin").classList.add("hidden");
+                $("spotifyUserBox").classList.remove("hidden");
+                $("spotifyUserBox").classList.add("flex");
+
+                $("spotifyUserName").textContent =
+                    data.user.display_name || data.user.id;
+
+                if (data.user.image) {
+                    $("spotifyUserImage").src = data.user.image;
+                    $("spotifyUserImage").classList.remove("hidden");
+                } else {
+                    $("spotifyUserImage").classList.add("hidden");
+                }
+
+                // Once logged in, show personal analytics only and hide the default catalog view
+                $("personalSpotifySection").classList.remove("hidden");
+                $("catalogSection").classList.add("hidden");
+
+                await loadPersonalSpotifyAnalytics();
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        // Aggregates how many times each album appears in the recent-plays
+        // window, using the real album name returned per track from Spotify.
+        function computePersonalAlbumCounts(recentTracks) {
+            const counts = new Map();
+
+            (recentTracks || []).forEach(row => {
+                const album = row.album;
+
+                if (!album) {
+                    return;
+                }
+
+                counts.set(album, (counts.get(album) || 0) + 1);
+            });
+
+            return Array.from(counts.entries())
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 10);
+        }
+
+        // Buckets the real played_at timestamps from the recent-plays
+        // window into per-day counts, oldest to newest.
+        function computePersonalListeningTrend(recentTracks) {
+            const counts = new Map();
+
+            (recentTracks || []).forEach(row => {
+                if (!row.played_at) {
+                    return;
+                }
+
+                const date = new Date(row.played_at);
+
+                if (Number.isNaN(date.getTime())) {
+                    return;
+                }
+
+                const key = date.toISOString().slice(0, 10);
+
+                counts.set(key, (counts.get(key) || 0) + 1);
+            });
+
+            return Array.from(counts.entries())
+                .sort((a, b) => a[0].localeCompare(b[0]));
+        }
+
+        async function loadPersonalSpotifyAnalytics() {
+            try {
+                const data = await getJSON(
+                    "/api/spotify/analytics"
+                );
+
+                if (!data.authenticated) {
+                    return;
+                }
+
+                // TEMP DEBUG: open DevTools > Console to inspect the raw
+                // response. If top_artists_by_plays comes back empty or
+                // with name: "-", the issue is on the backend (the
+                // /v1/artists batch lookup or missing artist IDs), not here.
+                console.log("Spotify analytics response:", data);
+
+                $("personalRecentPlays").textContent =
+                    Number(data.kpis.recent_plays).toLocaleString();
+
+                $("personalUniqueTracks").textContent =
+                    Number(data.kpis.unique_recent_tracks).toLocaleString();
+
+                $("personalUniqueArtists").textContent =
+                    Number(data.kpis.unique_recent_artists).toLocaleString();
+
+                $("personalTopArtists").textContent =
+                    data.kpis.top_artist || "-";
+
+                createRankedBarChart(
+                    "personalArtistChart",
+
+                    data.top_artists_by_plays.map(row =>
+                        row.name || row.artist_name || "Unknown Artist"
+                    ),
+
+                    data.top_artists_by_plays.map(row =>
+                        Number(row.plays || 0)
+                    ),
+
+                    "Plays"
+                );
+
+                createRankedBarChart(
+                    "personalTrackChart",
+
+                    data.top_tracks_by_plays.map(row => row.name),
+
+                    data.top_tracks_by_plays.map(row =>
+                        Number(row.plays || 0)
+                    ),
+
+                    "Plays"
+                );
+
+                const albumCounts = computePersonalAlbumCounts(
+                    data.recent_tracks
+                );
+
+                createRankedBarChart(
+                    "personalAlbumChart",
+                    albumCounts.map(row => row[0]),
+                    albumCounts.map(row => row[1]),
+                    "Plays"
+                );
+
+                const trend = computePersonalListeningTrend(
+                    data.recent_tracks
+                );
+
+                createTrendChart(
+                    "personalTrendChart",
+                    trend.map(row => row[0]),
+                    trend.map(row => row[1]),
+                    "Plays"
+                );
+
+                renderRecentSpotifyTracks(
+                    data.recent_tracks
+                );
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        function formatSpotifyDate(value) {
+            if (!value) {
+                return "-";
+            }
+
+            const date = new Date(value);
+
+            if (Number.isNaN(date.getTime())) {
+                return "-";
+            }
+
+            return date.toLocaleDateString(
+                "en-US",
+                {
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric"
+                }
+            );
+        }
+
+        function renderRecentSpotifyTracks(tracks) {
+            $("personalRecentTable").innerHTML =
+                tracks.map(row => `
+                    <tr class="hover:bg-slate-800/50">
+                        <td class="px-4 py-3 font-medium">
+                            <a
+                                href="${row.spotify_url || "#"}"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                class="hover:text-emerald-400"
+                            >
+                                ${row.name || "-"}
+                            </a>
+                        </td>
+
+                        <td class="px-4 py-3 text-slate-300">
+                            ${row.artist || "-"}
+                        </td>
+
+                        <td class="px-4 py-3 text-slate-400">
+                            ${row.album || "-"}
+                        </td>
+
+                        <td class="whitespace-nowrap px-4 py-3 text-slate-400">
+                            ${formatSpotifyDate(row.played_at)}
+                        </td>
+                    </tr>
+                `).join("");
+        }
+
+        function updateAudioFeatureCard(data) {
+            const featureTrack = data.features.tracks[0];
+
+            if (!featureTrack) {
+                $("featureTrack").textContent =
+                    "No audio features available";
+
+                $("featureArtist").textContent = "-";
+
+                $("spotifyLink").classList.add("hidden");
+
+                $("audioPlayerContainer").classList.add("hidden");
+                $("noAudioMessage").classList.remove("hidden");
+
+                $("energy").textContent = "-";
+                $("danceability").textContent = "-";
+                $("valence").textContent = "-";
+                $("acousticness").textContent = "-";
+                $("tempo").textContent = "-";
+
+                return;
+            }
+
+            $("featureTrack").textContent =
+                featureTrack.track;
+
+            $("featureArtist").textContent =
+                featureTrack.artist;
+
+            $("spotifyLink").href =
+                featureTrack.spotify_url;
+
+            $("spotifyLink").classList.remove("hidden");
+
+            if (
+                featureTrack.audio_available &&
+                featureTrack.audio_url
+            ) {
+                const player = $("audioPlayer");
+
+                player.src = featureTrack.audio_url;
+                player.load();
+
+                $("audioPlayerContainer").classList.remove("hidden");
+                $("noAudioMessage").classList.add("hidden");
+            } else {
+                $("audioPlayerContainer").classList.add("hidden");
+                $("noAudioMessage").classList.remove("hidden");
+            }
+
+            $("energy").textContent =
+                featureTrack.energy ?? "-";
+
+            $("danceability").textContent =
+                featureTrack.danceability ?? "-";
+
+            $("valence").textContent =
+                featureTrack.valence ?? "-";
+
+            $("acousticness").textContent =
+                featureTrack.acousticness ?? "-";
+
+            $("tempo").textContent =
+                featureTrack.tempo
+                    ? `${featureTrack.tempo} BPM`
+                    : "-";
+        }
+
+        async function loadDashboard() {
+            try {
+                const artist = $("artist").value;
+
+                const data = await getJSON(
+                    `/api/dashboard?artist=${encodeURIComponent(artist)}`
+                );
+
+                $("tracksKpi").textContent =
+                    Number(data.kpis.tracks).toLocaleString();
+
+                $("artistsKpi").textContent =
+                    Number(data.kpis.artists).toLocaleString();
+
+                $("albumsKpi").textContent =
+                    Number(data.kpis.albums).toLocaleString();
+
+                $("listensKpi").textContent =
+                    Number(data.kpis.listens).toLocaleString();
+
+                $("uniqueTracksKpi").textContent =
+                    Number(data.kpis.unique_tracks).toLocaleString();
+
+                createChart(
+                    "artistChart",
+                    "bar",
+                    data.artists.map(
+                        row => row.artist
+                    ),
+                    data.artists.map(
+                        row => Number(row.listens)
+                    ),
+                    "Listens"
+                );
+
+                createChart(
+                    "trackChart",
+                    "bar",
+                    data.tracks.map(
+                        row => row.track
+                    ),
+                    data.tracks.map(
+                        row => Number(row.listens)
+                    ),
+                    "Listens"
+                );
+
+                createChart(
+                    "trendChart",
+                    "line",
+                    data.trend.map(
+                        row => row.play_date
+                    ),
+                    data.trend.map(
+                        row => Number(row.listens)
+                    ),
+                    "Listens"
+                );
+
+                createChart(
+                    "albumChart",
+                    "bar",
+                    data.albums.map(
+                        row => row.album
+                    ),
+                    data.albums.map(
+                        row => Number(row.tracks)
+                    ),
+                    "Tracks"
+                );
+
+                updateAudioFeatureCard(data);
+
+                await loadTracks();
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        async function loadTracks() {
+            try {
+                const artist = $("artist").value;
+                const search = $("search").value;
+
+                const data = await getJSON(
+                    `/api/tracks?artist=${encodeURIComponent(artist)}&search=${encodeURIComponent(search)}`
+                );
+
+                $("trackTable").innerHTML =
+                    data.tracks
+                        .slice(0, 50)
+                        .map(row => `
+                            <tr class="hover:bg-slate-800/50">
+                                <td class="px-4 py-3 font-medium">
+                                    ${row.track}
+                                </td>
+
+                                <td class="px-4 py-3 text-slate-300">
+                                    ${row.artist}
+                                </td>
+
+                                <td class="px-4 py-3 text-slate-400">
+                                    ${row.album || "-"}
+                                </td>
+
+                                <td class="whitespace-nowrap px-4 py-3 text-slate-400">
+                                    ${row.release_date || "-"}
+                                </td>
+
+                                <td class="px-4 py-3 text-right">
+                                    ${Number(row.listens).toLocaleString()}
+                                </td>
+                            </tr>
+                        `)
+                        .join("");
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        async function initialize() {
+            await checkHealth();
+            await loadFilters();
+            await loadDashboard();
+            await checkSpotifyStatus();
+        }
+
+        initialize();
     </script>
-
 </body>
-
 </html>
