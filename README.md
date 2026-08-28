@@ -20,11 +20,18 @@ Data Analytics · ETL/Data Cleaning · Database Design · API Integration · Dat
 
 ## External Analytics Dashboard Overview
 
-** Microsoft Power BI **
+**Microsoft Power BI**
+
 ![Power BI - Spotify Overview](external-analytics-screenshot/overview-powerbi.png)
+
 ![Power BI - Artist Performance](external-analytics-screenshot/artist-performance.png)
+
 ![Power BI - Relationship and Measure Setup](external-analytics-screenshot/powerbi-setup.png)
 
-** Microsoft Excel **
+---
+
+**Microsoft Excel**
+
 ![Excel - Spotify Overview](external-analytics-screenshot/overview-excel.png)
+
 ![Excel - PivotTables](external-analytics-screenshot/excel-pivottables.png)
